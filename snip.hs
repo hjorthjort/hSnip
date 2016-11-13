@@ -24,9 +24,13 @@ dispatch = [
 view :: [FilePath] -> IO ()
 view [] = return ()
 view (x:xs) = do
-    allSnips <- readFile x
+    contents <- readFile x
+    let
+        allSnips = lines contents
+        numberedSnips = zipWith
+            (\n line -> show n ++ ": " ++ line) [0..] allSnips
     putStrLn $ map toUpper x
-    putStr allSnips
+    putStr $ unlines numberedSnips
     view xs
 
 add :: [String] -> IO ()
