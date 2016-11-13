@@ -2,6 +2,8 @@
 -- | Inspired by Learn You Some Haskell todo program.
 module Snippet where
 
+import Flags
+
 import Data.Char
 import Data.List
 import System.Directory
@@ -13,37 +15,27 @@ defaultFileName = "snip.txt"
 defaultDirName = "."
 defaultPath = defaultDirName ++ "/" ++ defaultFileName
 
--- Association list that connects command line options with functions.
-dispatch :: [(String, [String] -> IO ())]
-dispatch = [
-    ("view", view)
-  , ("add", add)
-  , ("remove", remove)
-           ]
-
-view :: [FilePath] -> IO ()
-view [] = return ()
-view (x:xs) = do
-    contents <- readFile x
+view :: FilePath -> IO ()
+view f = do
+    contents <- readFile f
     let
         allSnips = lines contents
         numberedSnips = zipWith
             (\n line -> show n ++ ": " ++ line) [0..] allSnips
-    putStrLn $ map toUpper x
+    putStrLn $ map toUpper f
     putStr $ unlines numberedSnips
-    view xs
 
-add :: [String] -> IO ()
-add [fileName, newSnip] =
+add :: FilePath -> String -> IO ()
+add fileName newSnip =
     appendFile fileName (newSnip ++ "\n")
 
-remove :: [String] -> IO ()
-remove [fileName, numberString] = do
+remove :: FilePath -> Int -> IO ()
+remove fileName n = do
     handle <- openFile fileName ReadMode
     (tmpName, tmpHandle) <- openTempFile defaultDirName "tmp"
     contents <- hGetContents handle
     let
-        (before, after) = splitAt (read numberString) $
+        (before, after) = splitAt n $
             lines contents
         newAllSnips = unlines $ before ++ (drop 1 after)
     hPutStr tmpHandle newAllSnips
@@ -51,17 +43,17 @@ remove [fileName, numberString] = do
     renameFile tmpName fileName
 
 main = do
-    (command:args) <- getArgs
-    let maybeAction = lookup command dispatch
-    -- Exit if command is unknown
-    checkAction maybeAction command
-    let Just action = maybeAction
-    action args
-        where
-            checkAction Nothing command = do
-                putStrLn $ "No command " ++ command
-                exitWith $ ExitFailure 1
-                return ()
-            checkAction (Just _) _ = do
-                return ()
-
+    args <- getArgs
+    let flags = getFlags args
+        fileName = if isSet "f" flags
+                      then getFlagArg "f" flags
+                      else defaultFileName
+    if isSet "v" flags
+       then view fileName
+       else return ()
+    if isSet "a" flags
+       then add fileName $ getFlagArg "a" flags
+       else return ()
+    if isSet "r" flags
+       then remove fileName $ read $ getFlagArg "r" flags
+       else return ()
