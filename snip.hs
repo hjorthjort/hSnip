@@ -29,7 +29,10 @@ view (x:xs) = do
     putStr allSnips
     view xs
 
-add [fileName, fileNamep] = undefined
+add :: [String] -> IO ()
+add [fileName, newSnip] =
+    appendFile fileName (newSnip ++ "\n")
+
 remove (x:xs) = undefined
 
 main = do
@@ -46,7 +49,4 @@ main = do
                 return ()
             checkAction (Just _) _ = do
                 return ()
-    -- newTodo <- getLine
-    -- withFile defaultPath AppendMode
-    --     (`hPutStr` (newTodo ++ "\n"))
 
