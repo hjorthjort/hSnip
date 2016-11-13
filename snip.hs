@@ -1,6 +1,5 @@
 -- | A snippet manager.
 -- | Inspired by Learn You Some Haskell todo program.
-module Snippet where
 
 import Flags
 
