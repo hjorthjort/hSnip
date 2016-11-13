@@ -6,10 +6,11 @@ module Flags(
     where
 
 import Data.Map as Map
+import Data.Maybe
 
 type Flag = String
-type FlagArg = Maybe String
-type FlagList = Map Flag FlagArg
+type FlagArg = String
+type FlagList = Map Flag (Maybe FlagArg)
 
 getFlags :: [String] -> FlagList
 getFlags = fromList . Prelude.map (\flag -> (parseFlag flag, if getFlagArg flag == []
@@ -26,12 +27,13 @@ getFlags = fromList . Prelude.map (\flag -> (parseFlag flag, if getFlagArg flag 
 
 isSet :: Flag -> FlagList -> Bool
 isSet f fs
-  | Map.lookup f fs == Nothing = False
+  | isNothing (Map.lookup f fs) = False
   | otherwise = True
 
 -- | Get argument for first occurence of given flag.
-getFlagArg :: Flag -> FlagList -> FlagArg
-getFlagArg f fs | isSet f fs = (\(Just a) -> a) $ Map.lookup f fs
+getFlagArgSafe :: Flag -> FlagList -> Maybe FlagArg
+getFlagArgSafe f fs | isSet f fs =  fromJust $ Map.lookup f fs
                 | otherwise = Nothing
 
--- | Delete first occurence of given flag.
+getFlagArg :: Flag -> FlagList -> FlagArg
+getFlagArg f fs = fromJust $ getFlagArgSafe f fs
