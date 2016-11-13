@@ -37,7 +37,18 @@ add :: [String] -> IO ()
 add [fileName, newSnip] =
     appendFile fileName (newSnip ++ "\n")
 
-remove (x:xs) = undefined
+remove :: [String] -> IO ()
+remove [fileName, numberString] = do
+    handle <- openFile fileName ReadMode
+    (tmpName, tmpHandle) <- openTempFile defaultDirName "tmp"
+    contents <- hGetContents handle
+    let
+        (before, after) = splitAt (read numberString) $
+            lines contents
+        newAllSnips = unlines $ before ++ (drop 1 after)
+    hPutStr tmpHandle newAllSnips
+    removeFile fileName
+    renameFile tmpName fileName
 
 main = do
     (command:args) <- getArgs
