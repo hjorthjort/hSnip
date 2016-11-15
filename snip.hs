@@ -38,6 +38,8 @@ remove fileName n = do
             lines contents
         newAllSnips = unlines $ before ++ (drop 1 after)
     hPutStr tmpHandle newAllSnips
+    hClose handle
+    hClose tmpHandle
     removeFile fileName
     renameFile tmpName fileName
 

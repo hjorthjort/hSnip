@@ -1,5 +1,4 @@
 # Bugs
-* Deleting the first line seems to delete the entire file
 
 # Features
 * Better error messages on empty input
