@@ -10,9 +10,23 @@ import System.Environment
 import System.Exit
 import System.IO
 
-defaultFileName = "snip.txt"
-defaultDirName = "."
-defaultPath = defaultDirName ++ "/" ++ defaultFileName
+-- We probably want to create this dynamically later, so we use a monad.
+defaultFile :: IO FilePath
+defaultFile = do
+    return "snip.txt"
+
+defaultDir :: IO FilePath
+defaultDir = do
+    homeDir <- getHomeDirectory
+    let snipDir = homeDir ++ "/.snip"
+    createDirectoryIfMissing False snipDir
+    return snipDir
+
+defaultPath :: IO FilePath
+defaultPath = do
+    dir <- defaultDir
+    file <- defaultFile
+    return $ dir ++ "/" ++ file
 
 view :: FilePath -> IO ()
 view f = do
@@ -30,8 +44,9 @@ add fileName newSnip =
 
 remove :: FilePath -> Int -> IO ()
 remove fileName n = do
+    tmpDir <- defaultDir
     handle <- openFile fileName ReadMode
-    (tmpName, tmpHandle) <- openTempFile defaultDirName "tmp"
+    (tmpName, tmpHandle) <- openTempFile tmpDir "tmp"
     contents <- hGetContents handle
     let
         (before, after) = splitAt n $
@@ -46,9 +61,9 @@ remove fileName n = do
 main = do
     args <- getArgs
     let flags = getFlags args
-        fileName = if isSet "f" flags
-                      then getFlagArg "f" flags
-                      else defaultFileName
+    fileName <- if isSet "f" flags
+                   then return $ getFlagArg "f" flags
+                   else defaultPath
     if isSet "v" flags
        then view fileName
        else return ()
