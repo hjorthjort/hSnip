@@ -17,8 +17,7 @@ defaultFile = do
 
 defaultDir :: IO FilePath
 defaultDir = do
-    homeDir <- getHomeDirectory
-    let snipDir = homeDir ++ "/.snip"
+    snipDir <- (++ "/.snip") `fmap` getHomeDirectory
     createDirectoryIfMissing False snipDir
     return snipDir
 
